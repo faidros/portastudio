@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portastudio 244</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="deck">
+    <header class="brand">
+      <div class="brand-left">
+        <span class="logo">TASCAM</span>
+        <span class="model">PORTASTUDIO&nbsp;244</span>
+      </div>
+      <div class="brand-right">
+        <span id="status" class="status">STANDBY</span>
+        <button id="power" class="power" title="Power on / request microphone">
+          <span class="power-led"></span> POWER
+        </button>
+      </div>
+    </header>
+
+    <main class="panel">
+      <!-- VU meters (2x2) -->
+      <section class="meters" id="meters" aria-label="VU meters"></section>
+
+      <!-- 4 channel strips (built by js/ui.js) -->
+      <section class="channels" id="channels" aria-label="Channel strips"></section>
+
+      <!-- Transport / master section -->
+      <section class="transport">
+        <div class="transport-top">
+          <div class="counter-block">
+            <div class="counter-label">TAPE COUNTER</div>
+            <div class="counter" id="counter">0000</div>
+          </div>
+          <div class="pitch-block">
+            <div class="counter-label">PITCH</div>
+            <div class="pitch" id="pitch"></div>
+            <div class="pitch-scale"><span>-</span><span>0</span><span>+</span></div>
+          </div>
+        </div>
+
+        <div class="piano" id="piano">
+          <button class="key key-stop" data-key="stop">STOP</button>
+          <button class="key key-play" data-key="play">PLAY</button>
+          <button class="key key-rec" data-key="rec">RECORD</button>
+          <button class="key key-rew" data-key="rew">REW</button>
+          <button class="key key-ff" data-key="ff">FF</button>
+          <button class="key key-pause" data-key="pause">PAUSE</button>
+        </div>
+
+        <div class="transport-bottom">
+          <div class="master-block">
+            <div class="counter-label">MASTER</div>
+            <div id="master-fader"></div>
+          </div>
+          <div class="aux-block">
+            <button id="cue" class="aux-btn">CUE</button>
+            <button id="dbx" class="aux-btn">dBX</button>
+            <div class="aux-note">monitor / noise gate</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="hint">
+      Drag knobs &amp; faders vertically (or scroll). Press <b>POWER</b> to start, then
+      <b>RECORD</b> to capture the mic onto the armed channels.
+    </footer>
+  </div>
+
+  <script type="module" src="js/ui.js"></script>
+</body>
+</html>
