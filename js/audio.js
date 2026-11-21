@@ -464,6 +464,35 @@ class TapeStudio {
     return { ch, master, led };
   }
 
+  // Offline render of all recorded tracks to one stereo AudioBuffer, using
+  // each channel's fader and pan plus the master fader. Tape effects
+  // (wow/flutter, saturation, hiss, gate) are not included.
+  async mixdown() {
+    const sr = this.ctx.sampleRate;
+    const used = this.tracks.map((b, i) => (b ? i : -1)).filter((i) => i >= 0);
+    if (!used.length) return null;
+    const length = Math.ceil(Math.max(...used.map((i) => this.tracks[i].length / this.pitch)));
+    const off = new OfflineAudioContext(2, length, sr);
+    const master = off.createGain();
+    master.gain.value = this.uiState.master;
+    master.connect(off.destination);
+    for (const i of used) {
+      const st = this.uiState.channels[i];
+      const src = off.createBufferSource();
+      src.buffer = this.tracks[i];
+      src.playbackRate.value = this.pitch;
+      const fader = off.createGain();
+      fader.gain.value = st.fader;
+      const pan = off.createStereoPanner();
+      pan.pan.value = st.pan;
+      src.connect(fader);
+      fader.connect(pan);
+      pan.connect(master);
+      src.start(0);
+    }
+    return off.startRendering();
+  }
+
   elapsed() {
     // rough elapsed time of the current playback/record session
     if (this.state === 'stopped') return this._frozenElapsed || 0;

@@ -341,7 +341,16 @@ studio.onTrackRecorded = (i, has) => {
   trackInds[i].classList.toggle('has', has);
   trackInds[i].textContent = has ? 'TRACK ' + (i + 1) + ' ●' : 'TRACK ' + (i + 1);
   channelsEl.children[i]._saveBtn.style.display = has ? '' : 'none';
+  mixBtn.style.display = studio.tracks.some(Boolean) ? '' : 'none';
 };
+
+const mixBtn = document.createElement('button');
+mixBtn.className = 'aux-btn';
+mixBtn.textContent = 'SAVE MIX';
+mixBtn.title = 'Save all recorded tracks mixed to one stereo WAV';
+mixBtn.style.display = 'none';
+mixBtn.addEventListener('click', saveMix);
+cueBtn.parentElement.appendChild(mixBtn);
 
 powerBtn.addEventListener('click', async () => {
   if (!powered) {
@@ -476,13 +485,22 @@ function audioBufferToWav(buffer) {
   return new Blob([ab], { type: 'audio/wav' });
 }
 
+function downloadWav(buffer, name) {
+  const url = URL.createObjectURL(audioBufferToWav(buffer));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
 function saveTrack(i) {
   const buf = studio.tracks[i];
   if (!buf) return;
-  const url = URL.createObjectURL(audioBufferToWav(buf));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `portastudio-track-${i + 1}.wav`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  downloadWav(buf, `portastudio-track-${i + 1}.wav`);
+}
+
+async function saveMix() {
+  const buf = await studio.mixdown();
+  if (buf) downloadWav(buf, 'portastudio-mix.wav');
 }
