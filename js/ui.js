@@ -352,6 +352,17 @@ mixBtn.style.display = 'none';
 mixBtn.addEventListener('click', saveMix);
 cueBtn.parentElement.appendChild(mixBtn);
 
+const clearBtn = document.createElement('button');
+clearBtn.className = 'aux-btn';
+clearBtn.textContent = 'CLEAR ALL';
+clearBtn.title = 'Erase all recorded tracks and start over';
+clearBtn.addEventListener('click', async () => {
+  if (!window.confirm('Radera alla inspelningar och börja om?')) return;
+  await studio.clearAll();
+  setStateText('stopped');
+});
+cueBtn.parentElement.appendChild(clearBtn);
+
 powerBtn.addEventListener('click', async () => {
   if (!powered) {
     try {

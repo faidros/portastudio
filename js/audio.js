@@ -14,8 +14,11 @@
  * is driven by the pitch control (shared across all tracks).
  */
 
+import { saveTrackData, loadTrackData, clearTrackData } from './store.js';
+
 class TapeStudio {
   constructor() {
+    this._restored = false;
     this.ctx = null;
     this.channels = [];
     this.master = null;
@@ -49,7 +52,33 @@ class TapeStudio {
     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     this._buildGraph();
     await this._initMic();
+    await this._restoreTracks();
     return this;
+  }
+
+  /** Loads tracks saved in IndexedDB into AudioBuffers (once per page load). */
+  async _restoreTracks() {
+    if (this._restored) return;
+    this._restored = true;
+    let recs;
+    try { recs = await loadTrackData(); } catch (e) { console.error('track restore failed', e); return; }
+    recs.forEach((rec, i) => {
+      if (!rec || this.tracks[i]) return;
+      const len = rec.channels[0].length;
+      const buf = this.ctx.createBuffer(rec.channels.length, len, rec.sampleRate);
+      rec.channels.forEach((data, c) => buf.getChannelData(c).set(data));
+      this.tracks[i] = buf;
+      if (this.onTrackRecorded) this.onTrackRecorded(i, true);
+    });
+  }
+
+  /** Stops transport, erases all recorded tracks (memory and IndexedDB). */
+  async clearAll() {
+    if (this.state !== 'stopped') await this.stop();
+    this.tracks = [null, null, null, null];
+    this._frozenElapsed = 0;
+    if (this.onTrackRecorded) [0, 1, 2, 3].forEach((i) => this.onTrackRecorded(i, false));
+    await clearTrackData();
   }
 
   async resume() {
@@ -426,6 +455,7 @@ class TapeStudio {
     }
     this.tracks[ch.index] = buf;
     if (this.onTrackRecorded) this.onTrackRecorded(ch.index, peak > 0.0005);
+    saveTrackData(ch.index, buf.sampleRate, [out.slice()]).catch((e) => console.error('track save failed', e));
   }
 
   _emitState() {
